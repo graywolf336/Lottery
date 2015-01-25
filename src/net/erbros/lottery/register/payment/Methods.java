@@ -46,14 +46,7 @@ public class Methods
 	 */
 	private static void _init()
 	{
-		addMethod("iConomy", new net.erbros.lottery.register.payment.methods.iCo6());
-		addMethod("iConomy", new net.erbros.lottery.register.payment.methods.iCo5());
-		addMethod("iConomy", new net.erbros.lottery.register.payment.methods.iCo4());
-		addMethod("BOSEconomy", new net.erbros.lottery.register.payment.methods.BOSE6());
-		addMethod("BOSEconomy", new net.erbros.lottery.register.payment.methods.BOSE7());
 		addMethod("Essentials", new net.erbros.lottery.register.payment.methods.EE17());
-		addMethod("Currency", new net.erbros.lottery.register.payment.methods.MCUR());
-		Dependencies.add("MultiCurrency");
 		addMethod("Vault", new net.erbros.lottery.register.payment.methods.VaultEco());
 	}
 

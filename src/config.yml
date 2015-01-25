@@ -1,6 +1,6 @@
 config:
   # Set this option to true if your using ANY supported economy system
-    useiConomy: false
+    useiConomy: true
   # Cost per ticket     
     cost: 5
   # If you aren't using an economy system, which item is used for currency

@@ -24,9 +24,9 @@ public class PluginListener implements Listener
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPluginDisable(final PluginDisableEvent event)
 	{
-		if (this.Methods != null && Methods.hasMethod())
+		if (this.Methods != null && net.erbros.lottery.register.payment.Methods.hasMethod())
 		{
-			final boolean check = Methods.checkDisabled(event.getPlugin());
+			final boolean check = net.erbros.lottery.register.payment.Methods.checkDisabled(event.getPlugin());
 
 			if (check)
 			{
@@ -39,11 +39,11 @@ public class PluginListener implements Listener
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPluginEnable(final PluginEnableEvent event)
 	{
-		if (!Methods.hasMethod())
+		if (!net.erbros.lottery.register.payment.Methods.hasMethod())
 		{
-			if (Methods.setMethod(Bukkit.getPluginManager()))
+			if (net.erbros.lottery.register.payment.Methods.setMethod(Bukkit.getPluginManager()))
 			{
-				this.plugin.setMethod(Methods.getMethod());
+				this.plugin.setMethod(net.erbros.lottery.register.payment.Methods.getMethod());
 				System.out.println(
 						"[Lottery] Payment method found (" + this.plugin.getMethod().getName() + " version: " + this.plugin.getMethod().getVersion() + ")");
 			}
