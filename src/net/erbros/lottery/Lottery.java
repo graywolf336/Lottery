@@ -47,10 +47,6 @@ public class Lottery extends JavaPlugin
 		server = getServer();
 
 		pm.registerEvents(new PluginListener(this), this);
-		if (lConfig.useWelcomeMessage())
-		{
-			pm.registerEvents(new PlayerJoinListener(this), this);
-		}
 
 		getCommand("lottery").setExecutor(new MainCommandExecutor(this));
 
