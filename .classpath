@@ -2,9 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/bukkit-17.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/craftbukkit-17.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/essentials.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/vault.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/STABLE/bukkit-17.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/STABLE/Vault.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Adam/Desktop/dev/Devel/Sof/Resco/STABLE/Essentials.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
