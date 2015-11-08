@@ -7,3 +7,8 @@
 /.idea/workspace.xml
 /.idea/ant.xml
 /.idea/workspace.xml
+*.DS_STORE
+/.classpath
+/.project
+/.idea/
+/.git/
