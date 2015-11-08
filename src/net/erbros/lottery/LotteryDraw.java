@@ -15,6 +15,7 @@ class LotteryDraw extends TimerTask
 		this.draw = draw;
 	}
 
+	@Override
 	public void run()
 	{
 

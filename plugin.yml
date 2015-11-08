@@ -1,8 +1,9 @@
 name: Lottery
 main: net.erbros.lottery.Lottery
-version: 0.9.6
-authors: [Erbros, KHobbits, Omnivion]
-website: www.erbros.net
+version: 1.0
+authors: [Erbros, KHobbits, Omnivion, Lactem]
+website: www.minecave.com
+depend: [Vault]
 commands:
   lottery:
     description: Provides access to Permissions commands and information.

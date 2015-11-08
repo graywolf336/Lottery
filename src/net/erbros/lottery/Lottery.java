@@ -1,38 +1,49 @@
 package net.erbros.lottery;
 
+import java.util.Random;
+
+import net.milkbowl.vault.economy.Economy;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import net.erbros.lottery.register.payment.Method;
-import net.erbros.lottery.register.payment.Methods;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 
 public class Lottery extends JavaPlugin
 {
-
-	private Method method = null;
-	public Methods methods = null;
-	public boolean timerStarted = false;
+	private Economy economy = null;
 	private Server server = null;
 	private LotteryConfig lConfig;
 	private LotteryGame lGame;
+	private Files files;
+	private BukkitTask drawTask;
+	private boolean add;
+	private long interval;
+	private Random random;
 
 	@Override
 	public void onDisable()
 	{
 		// Disable all running timers.
 		Bukkit.getServer().getScheduler().cancelTasks(this);
-
-		lConfig.debugMsg("[Lottery]: has been disabled (including timers).");
 	}
 
 	@Override
 	public void onEnable()
 	{
 
+        if (!setupEconomy())
+        {
+            this.getLogger().severe("Economy API not found! Disabling Lottery...");
+            this.getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        
+		files = new Files(this);
 		FileConfiguration config;
 		lConfig = new LotteryConfig(this);
 		lGame = new LotteryGame(this);
@@ -42,11 +53,9 @@ public class Lottery extends JavaPlugin
 		saveConfig();
 		lConfig.loadConfig();
 
-		final PluginManager pm = getServer().getPluginManager();
 
 		server = getServer();
 
-		pm.registerEvents(new PluginListener(this), this);
 
 		getCommand("lottery").setExecutor(new MainCommandExecutor(this));
 
@@ -61,6 +70,31 @@ public class Lottery extends JavaPlugin
 		// Start the timer for the first time.
 		startTimerSchedule(false);
 
+		interval = lConfig.getBroadcastInterval() * 60 * 20l;
+		random = new Random();
+		runBroadcastTask();
+	}
+
+	private void runBroadcastTask()
+	{
+		// Make the broadcast not be exactly every x minutes.
+		// Let's give it some variation to make the players not see a rigid interval.
+		int extra = ((lConfig.getBroadcastInterval() * 20) * random.nextInt(20) + 1);
+		new BukkitRunnable()
+		{
+			@Override
+			public void run()
+			{
+				lGame.broadcastMessage("DrawIn", lGame.timeUntil(false));
+				add = !add;
+				runBroadcastTask();
+			}
+		}.runTaskLater(this, add ? interval + extra : interval - extra);
+	}
+
+	public Files getFiles()
+	{
+		return files;
 	}
 
 	public Server getBukkitServer()
@@ -96,17 +130,10 @@ public class Lottery extends JavaPlugin
 	public void startTimerSchedule(final boolean drawAtOnce)
 	{
 		long extendtime;
-		// Cancel any existing timers.
-		if (timerStarted)
+		// Cancel the draw task.
+		if (drawTask != null)
 		{
-			// Let's try and stop any running threads.
-			try
-			{
-				Bukkit.getServer().getScheduler().cancelTasks((Plugin)this);
-			}
-			catch (ClassCastException exception)
-			{
-			}
+			drawTask.cancel();
 
 			extendtime = extendTime();
 		}
@@ -128,7 +155,6 @@ public class Lottery extends JavaPlugin
 		if (extendtime <= 0)
 		{
 			extendtime = 1000;
-			lConfig.debugMsg("Seems we need to make a draw at once!");
 		}
 
 		// Is the drawAtOnce boolean set to true? In that case, do drawing in a
@@ -137,30 +163,19 @@ public class Lottery extends JavaPlugin
 		{
 			extendtime = 100;
 			setNextexec(System.currentTimeMillis() + 100);
-			lConfig.debugMsg("DRAW NOW");
 		}
 
 		// Delay in server ticks. 20 ticks = 1 second.
 		extendtime = extendtime / 1000 * 20;
 		runDrawTimer(extendtime);
-
-		// Timer is now started, let it know.
-		timerStarted = true;
 	}
 
 	public void lotteryDraw()
 	{
-		lConfig.debugMsg("Doing a lottery draw");
-
 		if (getNextexec() > 0 && System.currentTimeMillis() + 1000 >= getNextexec())
 		{
-			// Get the winner, if any. And remove file so we are ready for
-			// new round.
-			lConfig.debugMsg("Getting winner.");
-			if (!lGame.getWinner())
-			{
-				lConfig.debugMsg("Failed getting winner");
-			}
+			// Get the winner, if any, and clear to file in preparation for the next round.
+			lGame.getWinner();
 			setNextexec(System.currentTimeMillis() + extendTime());
 		}
 		// Call a new timer.
@@ -169,13 +184,10 @@ public class Lottery extends JavaPlugin
 
 	public void extendLotteryDraw()
 	{
-		// Cancel timer.
-		try
+		// Cancel any the draw task.
+		if (drawTask != null)
 		{
-			Bukkit.getServer().getScheduler().cancelTasks((Plugin)this);
-		}
-		catch (ClassCastException exception)
-		{
+			drawTask.cancel();
 		}
 
 		long extendtime;
@@ -203,14 +215,12 @@ public class Lottery extends JavaPlugin
 		// But only if its more than 5 seconds left.
 		if (extendtime < 5 * 20)
 		{
-			server.getScheduler().runTaskLaterAsynchronously(this, new LotteryDraw(this, true), extendtime);
-			lConfig.debugMsg("LotteryDraw() " + extendtime + 100);
+			drawTask = server.getScheduler().runTaskLaterAsynchronously(this, new LotteryDraw(this, true), extendtime);
 		}
 		else
 		{
 			final long newtime = extendtime / 10;
-			server.getScheduler().runTaskLaterAsynchronously(this, new LotteryDraw(this, false), newtime);
-			lConfig.debugMsg("extendLotteryDraw() " + newtime);
+			drawTask = server.getScheduler().runTaskLaterAsynchronously(this, new LotteryDraw(this, false), newtime);
 		}
 	}
 
@@ -218,23 +228,20 @@ public class Lottery extends JavaPlugin
 	{
 		final double exacttime = lConfig.getHours() * 60 * 60 * 1000;
 		final long extendTime = (long)exacttime;
-		lConfig.debugMsg("extendTime: " + extendTime);
 		return extendTime;
 	}
 
-	public Method getMethod()
-	{
-		if (method == null) {
-			Methods.setMethod(this.getServer().getPluginManager());
-		}
-		if (method == null) {
-			this.getLogger().severe("Could not find valid economy plugin.");
-		}
-		return method;
-	}
+    private boolean setupEconomy() {
+        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(Economy.class);
+        if (economyProvider != null)
+        {
+            economy = economyProvider.getProvider();
+        }
+        return economy != null;
+    }
 
-	public void setMethod(Method method)
+	public Economy getEconomy()
 	{
-		this.method = method;
+		return economy;
 	}
 }

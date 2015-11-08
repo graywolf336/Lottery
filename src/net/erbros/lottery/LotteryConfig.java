@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
+
 import org.bukkit.configuration.file.FileConfiguration;
 
 
@@ -16,12 +16,10 @@ public class LotteryConfig
 	private double cost;
 	private double hours;
 	private long nextexec;
-	private boolean useiConomy;
-	private int material;
 	private double extraInPot;
-	private boolean broadcastBuying;
 	private int broadcastBuyingTime;
 	private boolean welcomeMessage;
+	private int broadcastInterval;
 	private double netPayout;
 	private boolean clearExtraInPot;
 	private int maxTicketsEachUser;
@@ -33,7 +31,6 @@ public class LotteryConfig
 	private int buyingExtendRemaining;
 	private double buyingExtendBase;
 	private double buyingExtendMultiplier;
-	private String taxTarget;
 
 	private HashMap<String, List<String>> messages;
 
@@ -51,15 +48,10 @@ public class LotteryConfig
 		plugin.reloadConfig();
 		config = plugin.getConfig();
 
-		debugMsg("Loading Lottery configuration");
-
 		hours = config.getDouble("config.hours", 24);
-
-		useiConomy = config.getBoolean("config.useiConomy", true);
-		material = config.getInt("config.material", 266);
-		broadcastBuying = config.getBoolean("config.broadcastBuying", true);
 		broadcastBuyingTime = config.getInt("config.broadcastBuyingTime", 120);
 		welcomeMessage = config.getBoolean("config.welcomeMessage", true);
+		broadcastInterval = config.getInt("config.broadcastInterval", 5);
 		extraInPot = config.getDouble("config.extraInPot", 0);
 		clearExtraInPot = config.getBoolean("config.clearExtraInPot", true);
 		netPayout = config.getDouble("config.netPayout", 100);
@@ -67,14 +59,13 @@ public class LotteryConfig
 		ticketsAvailable = config.getInt("config.numberOfTicketsAvailable", 0);
 		jackpot = config.getDouble("config.jackpot", 0);
 		nextexec = config.getLong("config.nextexec");
-		cost = Etc.formatAmount(config.getDouble("config.cost", 5), useiConomy);
+		cost = Etc.formatAmount(config.getDouble("config.cost", 5));
 		lastwinner = config.getString("config.lastwinner", "");
 		lastwinneramount = config.getDouble("config.lastwinneramount", 0);
 		buyingExtendDeadline = config.getBoolean("config.buyingExtend.enabled", true);
 		buyingExtendRemaining = config.getInt("config.buyingExtend.secondsRemaining", 30);
 		buyingExtendBase = config.getDouble("config.buyingExtend.extendBase", 15);
 		buyingExtendMultiplier = config.getDouble("config.buyingExtend.extendMultiplier", 1.5);
-		taxTarget = config.getString("config.taxTarget", "");
 
 		// Load messages?
 		loadCustomMessages();
@@ -104,7 +95,6 @@ public class LotteryConfig
 		messages.put("ErrorAtMax", formatCustomMessage("message.ErrorAtMax", "%prefix% You already have the maximum of %0% %1% already."));
 		messages.put("ErrorNotAfford", formatCustomMessage("message.ErrorNotAfford", "%prefix% You can\'t afford a ticket"));
 		messages.put("ErrorNumber", formatCustomMessage("message.ErrorNumber", "%prefix% Provide a number greater than zero (decimals accepted)"));
-		messages.put("ErrorClaim", formatCustomMessage("message.ErrorClaim", "%prefix% You did not have anything unclaimed."));
 
 		messages.put("TicketCommand", formatCustomMessage("message.TicketCommand", "%prefix% Buy a ticket for &c%cost% &rwith &c/lottery buy"));
 		messages.put("PotAmount", formatCustomMessage("message.PotAmount", "%prefix% There is currently &a%pot% &rin the pot."));
@@ -112,7 +102,6 @@ public class LotteryConfig
 		messages.put("TicketRemaining", formatCustomMessage("message.TimeRemaining", "%prefix% There is &c%0% &r%1% left."));
 		messages.put("CommandHelp", formatCustomMessage("message.CommandHelp", "%prefix% &c/lottery help&r for other commands"));
 		messages.put("LastWinner", formatCustomMessage("message.LastWinner", "%prefix% Last winner: %0% %1%"));
-		messages.put("CheckClaim", formatCustomMessage("message.CheckClaim", "%prefix% Check if you have won with &c/lottery claim"));
 		messages.put("BoughtTicket", formatCustomMessage("message.BoughtTicket", "%prefix% You got &c%0% &r%1% for &c%2%"));
 		messages.put("BoughtTickets", formatCustomMessage("message.BoughtTickets", "%prefix% You now have &c%0% &r%1%"));
 		messages.put("BoughtAnnounceDraw", formatCustomMessage("message.BoughtAnnounceDraw", "%prefix% &r%0% &rjust bought %1% %2%! Draw in %3%"));
@@ -121,15 +110,11 @@ public class LotteryConfig
 		messages.put("DrawNow", formatCustomMessage("message.DrawNow", "%prefix% Lottery will be drawn at once."));
 		messages.put("DrawSoon", formatCustomMessage("message.DrawSoon", "Soon"));
 		messages.put("DrawSoonLong", formatCustomMessage("message.DrawSoonLong", "Draw will occur soon!"));
-		messages.put("PlayerClaim", formatCustomMessage("message.PlayerClaim", "%prefix You just claimed %0%"));
-		messages.put("MessagesEnabled", formatCustomMessage("message.MessagesEnabled", "%prefix% You will now receive Lottery broadcast messages."));
-		messages.put("MessagesDisabled", formatCustomMessage("message.MessagesDisabled", "%prefix% You will no longer receive Lottery broadcast messages."));
 
 		messages.put("NoWinnerTickets", formatCustomMessage("message.NoWinnerTickets", "%prefix% No tickets sold this round. That\'s a shame."));
 		messages.put(
 				"NoWinnerRollover", formatCustomMessage("message.NoWinnerRollover", "%prefix% No winner, we have a rollover! &a%0% &rwent to jackpot!"));
 		messages.put("WinnerCongrat", formatCustomMessage("message.WinnerCongrat", "%prefix% Congratulations go to %0% &rfor winning &c%1%&r with &c%2%&r %3%."));
-		messages.put("WinnerCongratClaim", formatCustomMessage("message.WinnerCongratClaim", "%prefix% Use &c/lottery claim &rto claim the winnings."));
 		messages.put("WinnerSummary", formatCustomMessage("message.WinnerSummary", "%prefix% There was a total of %0% %1% buying %2% %3%"));
 
 		messages.put("AddToPot", formatCustomMessage("message.AddToPot", "%prefix% Added &a%0% &rto pot. Extra total is &a%1%"));
@@ -142,30 +127,24 @@ public class LotteryConfig
 				"Help", formatCustomMessage(
 				"message.Help",
 				"%prefix% Help commands%newline%%prefix% &c/lottery&r : Basic lottery info.%newline%%prefix% &c/lottery buy <n>&r : Buy ticket(s)." +
-				"%newline%%prefix% &c/lottery claim&r : Claim outstanding wins.%newline%%prefix% &c/lottery winners&r : Check last winners."));
+				"%newline%%prefix% &c/lottery winners&r : Check last winners."));
 		messages.put(
 				"HelpAdmin", formatCustomMessage(
 				"message.HelpAdmin",
-				"%prefix% &1/lottery draw&r : Draw lottery.%newline%%prefix% &1/lottery addtopot&r : Add number to pot.%newline%%prefix% &1/lottery " +
-				"config&r : Edit the config."));
+				"%prefix% &1/lottery draw&r : Draw lottery.%newline%%prefix% &1/lottery addtopot&r : Add number to pot."));
 		messages.put("HelpPot", formatCustomMessage("message.HelpPot", "%prefix% /lottery addtopot <number>"));
-		messages.put(
-				"HelpConfig", formatCustomMessage(
-				"message.HelpConfig",
-				"%prefix% Edit config commands%newline%%prefix% &c/lottery config cost <i>%newline%%prefix% &c/lottery config hours <i>%newline%%prefix% " +
-				"&c/lottery config maxTicketsEachUser <i>%newline%%prefix% &c/lottery config reload"));
-    messages.put("ticket", formatCustomMessage("message.Ticket", "ticket"));
-    messages.put("tickets", formatCustomMessage("message.Tickets", "tickets"));
-    messages.put("player", formatCustomMessage("message.player", "player"));
-    messages.put("players", formatCustomMessage("message.players", "players"));
-    messages.put("day", formatCustomMessage("message.day", "day"));
-    messages.put("days", formatCustomMessage("message.days", "days"));
-    messages.put("hour", formatCustomMessage("message.hour", "hour"));
-    messages.put("hours", formatCustomMessage("message.hours", "hours"));
-    messages.put("minute", formatCustomMessage("message.minute", "minute"));
-    messages.put("minutes", formatCustomMessage("message.minutes", "minutes"));
-    messages.put("second", formatCustomMessage("message.second", "second"));
-    messages.put("seconds", formatCustomMessage("message.seconds", "seconds"));
+		messages.put("ticket", formatCustomMessage("message.Ticket", "ticket"));
+		messages.put("tickets", formatCustomMessage("message.Tickets", "tickets"));
+		messages.put("player", formatCustomMessage("message.player", "player"));
+		messages.put("players", formatCustomMessage("message.players", "players"));
+		messages.put("day", formatCustomMessage("message.day", "day"));
+		messages.put("days", formatCustomMessage("message.days", "days"));
+		messages.put("hour", formatCustomMessage("message.hour", "hour"));
+		messages.put("hours", formatCustomMessage("message.hours", "hours"));
+		messages.put("minute", formatCustomMessage("message.minute", "minute"));
+		messages.put("minutes", formatCustomMessage("message.minutes", "minutes"));
+		messages.put("second", formatCustomMessage("message.second", "second"));
+		messages.put("seconds", formatCustomMessage("message.seconds", "seconds"));
 	}
 
   public String getPlural(String word, int amount){
@@ -229,35 +208,14 @@ public class LotteryConfig
 		return fList;
 	}
 
-	// Enable some debugging?
-	public void debugMsg(final String msg)
-	{
-		if (config.getBoolean("config.debug") && msg != null)
-		{
-			plugin.getLogger().log(Level.INFO, msg);
-		}
-	}
-
 	public double getCost()
 	{
 		return cost;
 	}
 
-	public void setCost(final double cost)
-	{
-		this.cost = cost;
-		set("config.cost", cost);
-	}
-
 	public double getHours()
 	{
 		return hours;
-	}
-
-	public void setHours(final double hours)
-	{
-		this.hours = hours;
-		set("config.hours", hours);
 	}
 
 	public long getNextexec()
@@ -269,16 +227,6 @@ public class LotteryConfig
 	{
 		this.nextexec = nextexec;
 		set("config.nextexec", nextexec);
-	}
-
-	public boolean useiConomy()
-	{
-		return useiConomy;
-	}
-
-	public int getMaterial()
-	{
-		return material;
 	}
 
 	public double getExtraInPot()
@@ -298,11 +246,6 @@ public class LotteryConfig
 		setExtraInPot(extraInPot);
 	}
 
-	public boolean useBroadcastBuying()
-	{
-		return broadcastBuying;
-	}
-
 	public int getBroadcastBuyingTime()
 	{
 		return broadcastBuyingTime;
@@ -313,15 +256,14 @@ public class LotteryConfig
 		return welcomeMessage;
 	}
 
+	public int getBroadcastInterval()
+	{
+		return broadcastInterval;
+	}
+
 	public double getNetPayout()
 	{
 		return netPayout;
-	}
-
-	public void setNetPayout(final double netPayout)
-	{
-		this.netPayout = netPayout;
-		set("config.netPayout", netPayout);
 	}
 
 	public boolean clearExtraInPot()
@@ -332,12 +274,6 @@ public class LotteryConfig
 	public int getMaxTicketsEachUser()
 	{
 		return maxTicketsEachUser;
-	}
-
-	public void setMaxTicketsEachUser(final int maxTicketsEachUser)
-	{
-		this.maxTicketsEachUser = maxTicketsEachUser;
-		set("config.maxTicketsEachUser", maxTicketsEachUser);
 	}
 
 	public int getTicketsAvailable()
@@ -398,13 +334,8 @@ public class LotteryConfig
 		return buyingExtendMultiplier;
 	}
 
-	public String getTaxTarget()
-	{
-		return taxTarget;
-	}
-
 	public String formatCurrency(double amount)
 	{
-		return plugin.getMethod().format(amount);
+		return plugin.getEconomy().format(amount);
 	}
 }

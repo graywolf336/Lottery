@@ -2,51 +2,27 @@ package net.erbros.lottery;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import org.bukkit.Material;
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
 
 
 public class Etc
 {
+	public static final int DAY = 60 * 60 * 24;
+	public static final int HOUR = 60 * 60;
+	public static final int MINUTE = 60;
+
 	public static String formatCost(double cost, LotteryConfig lConfig)
 	{
-		if (lConfig.useiConomy())
-		{
-			return lConfig.formatCurrency((formatAmount(cost, lConfig.useiConomy())));
-		}
-		else
-		{
-			return String.valueOf(
-					(int)formatAmount(cost, lConfig.useiConomy())).concat(
-					" " + formatMaterialName(lConfig.getMaterial()));
-		}
+		return lConfig.formatCurrency((formatAmount(cost)));
 	}
 
-	public static double formatAmount(double amount, final boolean usingiConomy)
+	public static double formatAmount(double amount)
 	{
-
-		if (usingiConomy)
-		{
-			return Math.floor(amount * 100) / 100;
-		}
-		else
-		{
-			return Math.floor(amount);
-		}
+		return Math.floor(amount * 100) / 100;
 	}
-
-	public static String formatMaterialName(final int materialId)
-	{
-		String rawMaterialName = Material.getMaterial(materialId).toString();
-		rawMaterialName = rawMaterialName.toLowerCase(Locale.ENGLISH);
-		// Large first letter.
-		final String firstLetterCapital = rawMaterialName.substring(0, 1).toUpperCase();
-		rawMaterialName = firstLetterCapital + rawMaterialName.substring(1, rawMaterialName.length());
-		return rawMaterialName.replace("_", " ");
-	}
-
-
 
 	public static String timeUntil(final long time, final boolean mini, LotteryConfig lConfig)
 	{
@@ -56,7 +32,7 @@ public class Etc
 
 		if (timeLeft >= 60 * 60 * 24)
 		{
-			final int days = (int)Math.floor(timeLeft / (60 * 60 * 24));
+			final int days = (int)Math.floor(timeLeft / (DAY));
 			timeLeft -= 60 * 60 * 24 * days;
 			if (mini)
 			{
@@ -69,7 +45,7 @@ public class Etc
 		}
 		if (timeLeft >= 60 * 60)
 		{
-			final int hours = (int)Math.floor(timeLeft / (60 * 60));
+			final int hours = (int)Math.floor(timeLeft / (HOUR));
 			timeLeft -= 60 * 60 * hours;
 			if (mini)
 			{
@@ -82,7 +58,7 @@ public class Etc
 		}
 		if (timeLeft >= 60)
 		{
-			final int minutes = (int)Math.floor(timeLeft / (60));
+			final int minutes = (int)Math.floor(timeLeft / (MINUTE));
 			timeLeft -= 60 * minutes;
 			if (mini)
 			{
@@ -121,21 +97,22 @@ public class Etc
 		return stringTimeLeft;
 	}
 
-	public static Map<String, Integer> realPlayersFromList(final List<String> ticketList)
+	public static Map<String, Integer> realPlayersFromList(final List<UUID> ticketList)
 	{
 		final Map<String, Integer> playerList = new HashMap<String, Integer>();
 		int value;
-		for (String check : ticketList)
+		for (UUID check : ticketList)
 		{
-			if (playerList.containsKey(check))
+			String name = Bukkit.getOfflinePlayer(check).getName();
+			if (playerList.containsKey(name))
 			{
-				value = Integer.parseInt(playerList.get(check).toString()) + 1;
+				value = Integer.parseInt(playerList.get(name).toString()) + 1;
 			}
 			else
 			{
 				value = 1;
 			}
-			playerList.put(check, value);
+			playerList.put(name, value);
 		}
 		return playerList;
 	}
