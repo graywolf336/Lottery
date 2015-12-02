@@ -1,9 +1,10 @@
 package net.erbros.lottery;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -66,9 +67,9 @@ public class LotteryGame
 		return plugin.getFiles().getTickets().getInt("values." + player);
 	}
 
-	public Map<UUID, Integer> playersInFile(String what)
+	public LotteryCollection playersInFile(String what)
 	{
-		Map<UUID, Integer> ret = Maps.newHashMap();
+		LotteryCollection ret = new LotteryCollection();
 		if (plugin.getFiles().getTickets().getConfigurationSection(what) == null)
 		{
 			return ret;
@@ -77,7 +78,7 @@ public class LotteryGame
 		{
 			int ticketAmount = plugin.getFiles().getTickets().getInt(what + "." + uuidString);
 			UUID uuid = UUID.fromString(uuidString);
-			ret.put(uuid, ticketAmount);
+			ret.add(uuid, ticketAmount);
 		}
 
 		return ret;
@@ -205,62 +206,48 @@ public class LotteryGame
 
 	public boolean getWinner()
 	{
-		final Map<UUID, Integer> players = playersInFile("values");
-		final List<UUID> playersUuidList = Lists.newArrayList(players.keySet());
+		final LotteryCollection players = playersInFile("values");
 
-		if (players.isEmpty())
+		if (players.getMap().isEmpty())
 		{
 			broadcastMessage("NoWinnerTickets");
 			return false;
 		}
 		else
 		{
-			// Find rand. Do minus 1 since its a zero based array.
-			int rand;
-
-			// is max number of tickets 0? If not, include empty tickets not sold.
-			if (lConfig.getTicketsAvailable() > 0 && ticketsSold() < lConfig.getTicketsAvailable())
-			{
-				rand = new SecureRandom().nextInt(lConfig.getTicketsAvailable());
-				// If it wasn't a player winning, then do some stuff. If it was a player, just continue below.
-				if (rand > players.size() - 1)
-				{
-					// No winner this time, pot goes on to jackpot!
-					final double jackpot = winningAmount();
-
-					lConfig.setJackpot(jackpot);
-
-					addToWinnerList("Jackpot", jackpot);
-					lConfig.setLastwinner("Jackpot");
-					lConfig.setLastwinneramount(jackpot);
-					broadcastMessage("NoWinnerRollover", Etc.formatCost(jackpot, lConfig));
-					clearAfterGettingWinner();
-					return true;
-				}
-			}
-			else
-			{
-				// Else just continue
-				rand = new SecureRandom().nextInt(players.size());
-			}
-
-
-
-			double amount = winningAmount();
-			OfflinePlayer winner = Bukkit.getOfflinePlayer(playersUuidList.get(rand));
-			int ticketsBought = playerInList(winner.getUniqueId());
-			// Give the player his/her money:
-			plugin.getEconomy().depositPlayer(Bukkit.getOfflinePlayer(playersUuidList.get(rand)), amount);
-			// Announce the winner:
-			broadcastMessage("WinnerCongrat", winner.getName(), Etc.formatCost(amount, lConfig), ticketsBought, lConfig.getPlural("ticket", ticketsBought));
-			addToWinnerList(winner.getName(), amount);
 			int ticketSize = 0;
-			for (int tickets : players.values())
+			for (int tickets : players.getMap().values())
 			{
 				ticketSize += tickets;
 			}
+			
+			double amount = winningAmount();
+			OfflinePlayer winner = Bukkit.getOfflinePlayer(players.next());
+			// If it wasn't a player winning, then do some stuff. If it was a player, just continue below.
+			if (winner == null)
+			{
+				// No winner this time, pot goes on to jackpot!
+				final double jackpot = winningAmount();
+				
+				lConfig.setJackpot(jackpot);
+				
+				addToWinnerList("Jackpot", jackpot);
+				lConfig.setLastwinner("Jackpot");
+				lConfig.setLastwinneramount(jackpot);
+				broadcastMessage("NoWinnerRollover", Etc.formatCost(jackpot, lConfig));
+				clearAfterGettingWinner();
+				return true;
+			}
+
+
+			int ticketsBought = playerInList(winner.getUniqueId());
+			// Give the player his/her money:
+			plugin.getEconomy().depositPlayer(winner, amount);
+			// Announce the winner:
+			broadcastMessage("WinnerCongrat", winner.getName(), Etc.formatCost(amount, lConfig), ticketsBought, lConfig.getPlural("ticket", ticketsBought));
+			addToWinnerList(winner.getName(), amount);
 			broadcastMessage(
-					"WinnerSummary", players.size(), lConfig.getPlural(
+					"WinnerSummary", players.getMap().size(), lConfig.getPlural(
               "player", ticketSize), ticketSize, lConfig.getPlural("ticket", ticketSize));
 
 			// Add last winner to config.
@@ -352,5 +339,41 @@ public class LotteryGame
 		// Lets get some colors on this, shall we?
 		outMessage = outMessage.replaceAll("(&([a-fk-or0-9]))", "\u00A7$2");
 		return outMessage;
+	}
+	
+	private class LotteryCollection {
+	    private final NavigableMap<UUID, Integer> map;
+	    private final Random random;
+	    private int highest;
+
+	    public LotteryCollection() {
+	        this(new Random());
+	    }
+
+	    public LotteryCollection(Random random) {
+	        this.random = random;
+	        map = Maps.newTreeMap();
+	        highest = 0;
+	    }
+
+	    public void add(UUID result, int weight) {
+	        if (weight > highest)
+	        	highest = weight;
+	        map.put(result, weight);
+	    }
+
+	    public UUID next() {
+	        double value = random.nextDouble() * highest;
+	        for (Map.Entry<UUID, Integer> entry : map.entrySet()) {
+	        	if (entry.getValue() > value) {
+	        		return entry.getKey();
+	        	}
+	        }
+	        return map.firstKey();
+	    }
+	    
+	    public Map<UUID, Integer> getMap() {
+	    	return map;
+	    }
 	}
 }
