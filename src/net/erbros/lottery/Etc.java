@@ -1,11 +1,5 @@
 package net.erbros.lottery;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.bukkit.Bukkit;
 
 
 public class Etc
@@ -95,26 +89,6 @@ public class Etc
 		}
 
 		return stringTimeLeft;
-	}
-
-	public static Map<String, Integer> realPlayersFromList(final List<UUID> ticketList)
-	{
-		final Map<String, Integer> playerList = new HashMap<String, Integer>();
-		int value;
-		for (UUID check : ticketList)
-		{
-			String name = Bukkit.getOfflinePlayer(check).getName();
-			if (playerList.containsKey(name))
-			{
-				value = Integer.parseInt(playerList.get(name).toString()) + 1;
-			}
-			else
-			{
-				value = 1;
-			}
-			playerList.put(name, value);
-		}
-		return playerList;
 	}
 
 	public static int parseInt(final String arg)

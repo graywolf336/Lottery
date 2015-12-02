@@ -3,6 +3,7 @@ package net.erbros.lottery;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -13,6 +14,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 
 public class LotteryGame
@@ -64,9 +66,9 @@ public class LotteryGame
 		return plugin.getFiles().getTickets().getInt("values." + player);
 	}
 
-	public List<UUID> playersInFile(String what)
+	public Map<UUID, Integer> playersInFile(String what)
 	{
-		List<UUID> ret = Lists.newArrayList();
+		Map<UUID, Integer> ret = Maps.newHashMap();
 		if (plugin.getFiles().getTickets().getConfigurationSection(what) == null)
 		{
 			return ret;
@@ -75,10 +77,7 @@ public class LotteryGame
 		{
 			int ticketAmount = plugin.getFiles().getTickets().getInt(what + "." + uuidString);
 			UUID uuid = UUID.fromString(uuidString);
-			for (int i = 0; i < ticketAmount; i++)
-			{
-				ret.add(uuid);
-			}
+			ret.put(uuid, ticketAmount);
 		}
 
 		return ret;
@@ -206,7 +205,8 @@ public class LotteryGame
 
 	public boolean getWinner()
 	{
-		final List<UUID> players = playersInFile("values");
+		final Map<UUID, Integer> players = playersInFile("values");
+		final List<UUID> playersUuidList = Lists.newArrayList(players.keySet());
 
 		if (players.isEmpty())
 		{
@@ -247,16 +247,21 @@ public class LotteryGame
 
 
 			double amount = winningAmount();
-			OfflinePlayer winner = Bukkit.getOfflinePlayer(players.get(rand));
+			OfflinePlayer winner = Bukkit.getOfflinePlayer(playersUuidList.get(rand));
 			int ticketsBought = playerInList(winner.getUniqueId());
 			// Give the player his/her money:
-			plugin.getEconomy().depositPlayer(Bukkit.getOfflinePlayer(players.get(rand)), amount);
+			plugin.getEconomy().depositPlayer(Bukkit.getOfflinePlayer(playersUuidList.get(rand)), amount);
 			// Announce the winner:
 			broadcastMessage("WinnerCongrat", winner.getName(), Etc.formatCost(amount, lConfig), ticketsBought, lConfig.getPlural("ticket", ticketsBought));
 			addToWinnerList(winner.getName(), amount);
+			int ticketSize = 0;
+			for (int tickets : players.values())
+			{
+				ticketSize += tickets;
+			}
 			broadcastMessage(
-					"WinnerSummary", Etc.realPlayersFromList(players).size(), lConfig.getPlural(
-              "player", Etc.realPlayersFromList(players).size()), players.size(), lConfig.getPlural("ticket", players.size()));
+					"WinnerSummary", ticketSize, lConfig.getPlural(
+              "player", ticketSize), players.size(), lConfig.getPlural("ticket", players.size()));
 
 			// Add last winner to config.
 			lConfig.setLastwinner(winner.getName());
