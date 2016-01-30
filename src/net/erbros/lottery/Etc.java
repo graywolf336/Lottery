@@ -64,16 +64,6 @@ public class Etc
 				stringTimeLeft += Integer.toString(minutes) + " " + lConfig.getPlural("minute", minutes) + ", ";
 			}
 		}
-		else
-		{
-			// Lets remove the last comma, since it will look bad with 2 days, 3
-			// hours, and 14 seconds.
-			if (!stringTimeLeft.equalsIgnoreCase("") && !mini)
-			{
-				stringTimeLeft = stringTimeLeft.substring(
-						0, stringTimeLeft.length() - 1);
-			}
-		}
 		final int secs = (int)timeLeft;
 		if (mini)
 		{

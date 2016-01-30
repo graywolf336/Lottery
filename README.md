@@ -9,6 +9,7 @@ Removed Features:
 * Claiming (no longer necessary as offline players will get their money reward, and material rewards are removed)
 * Opting out of lottery messages/broadcasts (/lottery messages)
 * In-game config editing (/lottery config)
+* Unnecessary comma removal (which led to minor language bug)
 
 Changed Features:
 =
