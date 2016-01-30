@@ -3,7 +3,7 @@ This is a slimmed-down, slightly-optimized fork of Lottery made for MineCave (mi
 Removed Features:
 =
 * Items as a replacement for money
-* Eseentials dependency (only Vault is needed)
+* Essentials dependency (only Vault is needed)
 * Tax sent to an account
 * Debug mode
 * Claiming (no longer necessary as offline players will get their money reward, and material rewards are removed)
