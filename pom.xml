@@ -6,8 +6,10 @@
 	<groupId>net.erbros.lottery</groupId>
 	<artifactId>Lottery</artifactId>
 	<version>1.0-SNAPSHOT</version>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.build.number>0</project.build.number>
 	</properties>
 
 	<repositories>

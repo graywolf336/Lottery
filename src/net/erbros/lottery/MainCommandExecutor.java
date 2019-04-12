@@ -1,16 +1,21 @@
 package net.erbros.lottery;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
 
-public class MainCommandExecutor implements CommandExecutor
+public class MainCommandExecutor implements CommandExecutor, TabCompleter
 {
 
+    final private static String[] userOptions = new String[] { "buy", "winners", "help" };
 	final private Lottery plugin;
 	final private LotteryConfig lConfig;
 	final private LotteryGame lGame;
@@ -260,4 +265,35 @@ public class MainCommandExecutor implements CommandExecutor
 		lConfig.addExtraInPot(addToPot);
 		lGame.sendMessage(sender,"AddToPot", addToPot, lConfig.getExtraInPot());
 	}
+
+
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!sender.hasPermission("lottery.buy")) {
+            return Collections.emptyList();
+        }
+        
+        List<String> results = new ArrayList<String>();
+        
+        switch(args.length) {
+            case 1:
+                if (sender.hasPermission("lottery.admin.draw"))
+                    if (args[0].isEmpty() || StringUtil.startsWithIgnoreCase("draw", args[0]))
+                        results.add("draw");
+                
+                if (sender.hasPermission("lottery.admin.addtopot"))
+                    if (args[0].isEmpty() || StringUtil.startsWithIgnoreCase("addtopot", args[0]))
+                        results.add("addtopot");
+                
+                for (String s : userOptions)
+                    if (args[0].isEmpty() || StringUtil.startsWithIgnoreCase(s, args[0]))
+                        results.add(s);
+                break;
+            default:
+                return results;
+        }
+        
+        Collections.sort(results);
+        
+        return results;
+    }
 }
