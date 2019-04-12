@@ -3,7 +3,7 @@ config:
     cost: 5
     
   # How long between draws  
-    hours: 2   
+    hours: 4
   # At how many seconds remaining should we append time till draw.
     broadcastBuyingTime: 120
   # Should we show lottery status on player join?  

@@ -1,15 +1,17 @@
 name: Lottery
 main: net.erbros.lottery.Lottery
-version: 1.0
-authors: [Erbros, KHobbits, Omnivion, Lactem]
-website: www.minecave.com
+version: maven-version-number
+authors: [Erbros, KHobbits, Omnivion, Lactem, graywolf336]
 depend: [Vault]
+api-version: 1.13
+
 commands:
   lottery:
     description: Provides access to Permissions commands and information.
     permission: lottery.buy
     usage: /<command> [winners|claim|help|messages|buy [amount]]
     aliases: [lot,lotto]
+
 permissions:
   lottery.*:
       description: Full access to Lottery plugin.
@@ -17,7 +19,6 @@ permissions:
           lottery.buy: true
           lottery.admin.draw: true
           lottery.admin.addtopot: true
-          lottery.admin.editconfig: true
   lottery.buy:
       description: Basic lottery rights. Can buy, check lottery info and claim winnings.
       default: true
@@ -26,7 +27,4 @@ permissions:
       default: op
   lottery.admin.addtopot:
       description: Access to /lottery addtopot command.
-      default: op
-  lottery.admin.editconfig:
-      description: Access to ingame config editing and reloading.
       default: op
