@@ -237,6 +237,12 @@ public class MainCommandExecutor implements CommandExecutor, TabCompleter
 	{
 		// Get the winners.
 		final List<String> winnerArray = lGame.getWinners();
+		
+		if (winnerArray.isEmpty()) {
+		    lGame.sendMessage(sender, "NoWinnersYet");
+		    return;
+		}
+
 		String[] split;
 		String winListPrice;
 		for (int i = 0; i < winnerArray.size(); i++)

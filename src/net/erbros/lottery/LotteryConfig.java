@@ -116,6 +116,7 @@ public class LotteryConfig
 				"NoWinnerRollover", formatCustomMessage("message.NoWinnerRollover", "%prefix% No winner, we have a rollover! &a%0% &rwent to jackpot!"));
 		messages.put("WinnerCongrat", formatCustomMessage("message.WinnerCongrat", "%prefix% Congratulations go to %0% &rfor winning &c%1%&r with &c%2%&r %3%."));
 		messages.put("WinnerSummary", formatCustomMessage("message.WinnerSummary", "%prefix% There was a total of %0% %1% buying %2% %3%"));
+		messages.put("NoWinnersYet", formatCustomMessage("message.NoWinnersYet", "%prefix% There have been no winners &cyet&r."));
 
 		messages.put("AddToPot", formatCustomMessage("message.AddToPot", "%prefix% Added &a%0% &rto pot. Extra total is &a%1%"));
 		messages.put("ConfigCost", formatCustomMessage("message.ConfigCost", "%prefix% Cost changed to &c%0%"));

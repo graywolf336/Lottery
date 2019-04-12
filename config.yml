@@ -69,6 +69,7 @@ message:
     NoWinnerRollover: '%prefix% No winner, we have a rollover! &a%0% &rwent to jackpot!'
     WinnerCongrat: '%prefix% Congratulations go to %0% &rfor winning &c%1%&r with &c%2%&r %3%'
     WinnerSummary: '%prefix% There was a total of %0% %1% buying %2% %3%'
+    NoWinnersYet: '%prefix% There have been no winners &cyet&r.'
 
     AddToPot: '%prefix% Added &a%0% &rto pot. Extra total is &a%1%'
     ConfigCost: '%prefix% Cost changed to &c%0%'
