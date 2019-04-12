@@ -1,12 +1,8 @@
 package net.erbros.lottery;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.logging.Level;
+import java.io.InputStreamReader;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,11 +10,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Files {
-	
 	private Plugin plugin;
-	
 	private FileConfiguration tickets;
-	
 	private File ticketsFile;
 	
 	public Files(JavaPlugin plugin) {
@@ -26,7 +19,7 @@ public class Files {
 		if (!plugin.getDataFolder().exists())
 			plugin.getDataFolder().mkdir();
 		
-		setupFile(ticketsFile, tickets, "tickets", "tickets.yml");
+		this.setupTicketsFile();
 	}
 	
 	public FileConfiguration getTickets() {
@@ -34,75 +27,42 @@ public class Files {
 	}
 	
 	public void saveTickets() {
-		save(ticketsFile, tickets, "tickets.yml");
+		try {
+            this.tickets.save(this.ticketsFile);
+        } catch (final IOException e) {
+            e.printStackTrace();
+            plugin.getLogger().severe("The tickets file (tickets.yml) could NOT be saved.");
+        }
 	}
 	
 	public void reloadTickets() {
-		tickets = YamlConfiguration.loadConfiguration(ticketsFile);
+		this.tickets = YamlConfiguration.loadConfiguration(this.ticketsFile);
 	}
+
+	private void setupTicketsFile() {
+		this.ticketsFile = new File(plugin.getDataFolder(), "tickets.yml");
+
+		if (!this.ticketsFile.exists())
+			copyFileFromJar("tickets.yml");
+		
+		this.reloadTickets();
+	}	   
 	
-	// Copies a file from the JAR (including comments) and puts it into the plugins folder.
-	public void copyFileFromJar(String fileName) {
-		File file = new File(plugin.getDataFolder() + File.separator + fileName);
-		if (!file.exists())
-			file.getParentFile().mkdirs();
-		InputStream fis = plugin.getResource(fileName);
-		FileOutputStream fos = null;
-		try {
-			fos = new FileOutputStream(file);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		try {
-			byte[] buf = new byte[1024];
-			int i = 0;
-			while ((i = fis.read(buf)) != -1) {
-				fos.write(buf, 0, i);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (fis != null) {
-				try {
-					fis.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (fos != null) {
-				try {
-					fos.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	// Sets up a file, including saving and copying from local file.
-	private void setupFile(File file, FileConfiguration fileTickets, String variableName, String fileName) {
-		file = new File(plugin.getDataFolder(), fileName);
-		if (!file.exists())
-			copyFileFromJar(fileName);
-		fileTickets = YamlConfiguration.loadConfiguration(file);
-		try {
-			Field field1 = getClass().getDeclaredField(variableName);
-			Field field2 = getClass().getDeclaredField(variableName.concat("File"));
-			field1.setAccessible(true);
-			field2.setAccessible(true);
-			field1.set(this, fileTickets);
-			field2.set(this, file);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}	    
-	
-	// Saves a file.
-	private void save(File file, FileConfiguration fileTickets, String fileName) {
-		try {
-			fileTickets.save(file);
-		} catch (final IOException e) {
-			plugin.getLogger().log(Level.WARNING, "The file " + fileName + " couldn't be saved.");
-		}
-	}
+   // Copies a file from the JAR (including comments) and puts it into the plugins folder.
+    private void copyFileFromJar(String fileName) {
+        if (!fileName.endsWith(".yml")) {
+            this.plugin.getLogger().severe("Invalid file to copy from jar: " + fileName);
+            return;
+        }
+
+        File file = new File(plugin.getDataFolder() + File.separator + fileName);
+        YamlConfiguration f = YamlConfiguration.loadConfiguration(new InputStreamReader(plugin.getResource(fileName)));
+
+        try {
+            f.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+            this.plugin.getLogger().severe("Failed to copy the file \"" + fileName + "\" from the plugin file.");
+        }
+    }
 }

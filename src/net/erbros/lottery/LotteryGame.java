@@ -109,7 +109,7 @@ public class LotteryGame
 	{
 		double amount = 0;
 
-		// we only have tax is the net payout is between 0 and 100.
+		// we only have tax if the net payout is between 0 and 100.
 		if (lConfig.getNetPayout() >= 100 || lConfig.getNetPayout() <= 0)
 		{
 			return amount;
